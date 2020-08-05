@@ -1,0 +1,49 @@
+/*
+Enter your query below.
+Please append a semicolon ";" at the end of the query
+*/
+
+
+SELECT name, D.phone_number, call_units
+FROM customer_detail D JOIN
+
+
+    (SELECT phone_number, SUM(call_units) AS call_units FROM
+        ((SELECT incoming_number AS phone_number, SUM(duration) AS call_units
+        FROM CALL_RECORD 
+        where MONTH(dialed_on) = 5 AND YEAR(dialed_on) = 2018
+        GROUP BY incoming_number)
+
+        UNION
+
+        (SELECT outgoing_number AS phone_number, SUM(call_units) AS call_units 
+        FROM
+            (SELECT outgoing_number, 
+            CASE 
+                WHEN duration <= 120 THEN 500 
+                WHEN duration > 120 THEN (duration - 120) * 2 + 500 
+            END AS call_units 
+            FROM CALL_RECORD 
+            where MONTH(dialed_on) = 5 AND YEAR(dialed_on) = 2018) AS A 
+        GROUP BY outgoing_number)) AS B
+    GROUP BY phone_number) AS C
+ON D.phone_number = C.phone_number;
+
+
+
+
+
+
+-- SELECT Name, phone_number, SUM(BILLING) FROM
+-- ((select Name, phone_number, 
+-- CASE 
+--     WHEN duration <= 120 THEN 500 
+--     WHEN duration > 120 THEN (duration - 120) * 2 + 500 
+-- END AS BILLING
+-- from customer_detail c join call_record d on c.phone_number=d.outgoing_number 
+-- where month(dialed_on) = 5 AND YEAR(dialed_on) = 2018)
+-- UNION
+-- (select name, phone_number, duration AS BILLING
+-- from customer_detail c join call_record d on c.phone_number=d.incoming_number 
+-- where month(dialed_on) = 5 AND YEAR(dialed_on) = 2018)) AS dummy
+-- GROUP BY phone_number, name;
